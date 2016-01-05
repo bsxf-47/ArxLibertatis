@@ -1094,10 +1094,11 @@ static void Cedric_RenderObject(EERIE_3DOBJ * eobj, Skeleton * obj, Entity * io,
 	if(!io && IN_BOOK_DRAW && eobj == entities.player()->obj)
 		use_io = entities.player();
 
-	arx_assert(use_io);
+	//arx_assert(use_io);
 
 	HaloInfo haloInfo;
-	PrepareAnimatedObjectHalo(haloInfo, pos, obj, use_io, eobj);
+	if(use_io)
+		PrepareAnimatedObjectHalo(haloInfo, pos, obj, use_io, eobj);
 
 	bool glow = false;
 	ColorRGBA glowColor;
@@ -1638,7 +1639,7 @@ void EERIEDrawAnimQuatRender(EERIE_3DOBJ *eobj, const Vec3f & pos, Entity *io, f
 						 (io->_npcdata->behavior & BEHAVIOUR_FIGHT) &&
 						 closerThan(io->pos, player.pos, 240.f);
 
-	if(!isFightingNpc && ARX_SCENE_PORTAL_ClipIO(io, pos))
+	if(!isFightingNpc && io && ARX_SCENE_PORTAL_ClipIO(io, pos))
 		return;
 
 	Cedric_AnimateDrawEntityRender(eobj, pos, io, invisibility);
