@@ -33,6 +33,7 @@ bool initLocalisation();
  * \return The localized string based on the currently loaded locale file
  */
 std::string getLocalised( const std::string& name, const std::string& default_value = "" );
+std::string getLocalisedKey(const std::string & name, const std::string & key, const std::string & default_value = "");
 
 long getLocalisedKeyCount(const std::string & sectionname);
 

@@ -174,3 +174,10 @@ std::string getLocalised(const std::string & name, const std::string & default_v
 	
 	return localisation.getKey(name, std::string(), default_value);
 }
+
+std::string getLocalisedKey(const std::string & name, const std::string & key, const std::string & default_value) {
+
+	arx_assert(name.find_first_of("ABCDEFGHIJKLMNOPQRSTUVWXYZ[]") == std::string::npos);
+
+	return localisation.getKey(name, key, default_value);
+}

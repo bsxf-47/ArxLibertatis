@@ -54,6 +54,8 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 
 #include "animation/Animation.h"
 
+#include "cinematic/CinematicController.h"
+
 #include "core/Config.h"
 #include "core/Core.h"
 #include "core/Localisation.h"
@@ -75,6 +77,8 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #include "io/resource/ResourcePath.h"
 #include "io/log/Logger.h"
 
+#include "platform/Time.h"
+
 #include "scene/GameSound.h"
 #include "scene/Interactive.h"
 
@@ -85,8 +89,11 @@ extern TextureContainer *	arx_logo_tc;
 extern bool EXTERNALVIEW;
 extern bool REQUEST_SPEECH_SKIP;
 
+SUBTITLE subs[MAX_SPEECH];
 ARX_SPEECH aspeech[MAX_ASPEECH];
 Notification speech[MAX_SPEECH];
+
+int activeSub = -1;
 
 
 void ARX_SPEECH_Init() {
@@ -285,6 +292,9 @@ static void ARX_SPEECH_Release(long i) {
 			aspeech[i].io->animlayer[2].cur_anim = NULL;
 		}
 		
+		if(aspeech[i].subtitle) {
+			aspeech[i].subtitle->clear();
+		}
 		aspeech[i].clear();
 	}
 }
@@ -327,7 +337,6 @@ void ARX_SPEECH_ClearIOSpeech(Entity * io) {
 	}
 }
 
-
 long ARX_SPEECH_AddSpeech(Entity * io, const std::string & data, long mood,
                           SpeechFlags flags) {
 	
@@ -348,48 +357,28 @@ long ARX_SPEECH_AddSpeech(Entity * io, const std::string & data, long mood,
 	aspeech[num].duration = ArxDurationMs(2000); // Minimum value
 	aspeech[num].flags = flags;
 	aspeech[num].sample = audio::INVALID_ID;
-	aspeech[num].fDeltaY = 0.f;
 	aspeech[num].mood = mood;
 
 	LogDebug("speech \"" << data << '"');
 	
 	res::path sample;
 	
-	if(flags & ARX_SPEECH_FLAG_NOTEXT) {
+	// For non-conversation speech choose a random variant
+	long count = getLocalisedKeyCount(data);  
+	long variant = 1;
+
+	if(count > 1) {
+		do {
+			variant = Random::get(1, count);
+		} while(io->lastspeechflag == variant);
+		io->lastspeechflag = checked_range_cast<short>(variant);
+	}
 		
-		// For non-conversation speech choose a random variant
+	LogDebug(" -> " << variant << " / " << count);
 		
-		long count = getLocalisedKeyCount(data);  
-		long variant = 1;
-		
-		// TODO For some samples there are no corresponding entries
-		// in the localization file  (utext_*.ini) -> count will be 0
-		// We should probably just count the number of sample files
-		
-		if(count > 1) {
-			do {
-				variant = Random::get(1, count);
-			} while(io->lastspeechflag == variant);
-			io->lastspeechflag = checked_range_cast<short>(variant);
-		}
-		
-		LogDebug(" -> " << variant << " / " << count);
-		
-		if(variant > 1) {
-			sample = data + boost::lexical_cast<std::string>(variant);
-		} else {
-			sample = data;
-		}
-		
+	if(variant > 1) {
+		sample = data + boost::lexical_cast<std::string>(variant);
 	} else {
-		
-		std::string _output = getLocalised(data);
-		
-		io->lastspeechflag = 0;
-		aspeech[num].text.clear();
-		aspeech[num].text = _output;
-		aspeech[num].duration = std::max(aspeech[num].duration, ArxDurationMs((strlen(_output.c_str()) + 1) * 100));
-		
 		sample = data;
 	}
 	
@@ -410,6 +399,10 @@ long ARX_SPEECH_AddSpeech(Entity * io, const std::string & data, long mood,
 
 	if (aspeech[num].duration < ArxDurationMs(500))
 		aspeech[num].duration = ArxDurationMs(2000);
+
+	if(aspeech[num].sample != audio::INVALID_ID) {
+		aspeech[num].subtitle = addSub(data, "string" + ((variant != 1) ? boost::lexical_cast<std::string>(variant) : ""), io->pos, aspeech[num].duration);
+	}
 	
 	return num;
 }
@@ -460,63 +453,127 @@ void ARX_SPEECH_Update() {
 				ScriptEvent::send(es, SM_EXECUTELINE, "", io, "", scrpos);
 		}
 	}
+}
 
+static long getFreeSub() {
+	
 	for(size_t i = 0; i < MAX_ASPEECH; i++) {
-		ARX_SPEECH *speech = &aspeech[i];
+		if(!subs[i].exist) {
+			return i;
+		}
+	}
+	
+	return -1;
+}
 
-		if(!speech->exist)
-			continue;
-
-		if(speech->text.empty())
-			continue;
+SUBTITLE *addSub(const std::string & key, const std::string & variant, Vec3f sourcePos, ArxDuration duration) {
+	if(key.empty()) {
+		return NULL;
+	}
+	
+	std::string _output = getLocalisedKey(key, variant);
+	
+	if(!_output.empty()) {
+		long num = getFreeSub();
+		if(num < 0) {
+			return NULL;
+		}
 		
-		if(!cinematicBorder.isActive())
-			continue;
-
-		/*if(cinematicBorder.CINEMA_DECAL < 100.f)
-			continue;*/
-
-		int lineHeight = hFontInBook->getLineHeight();
-
-		float textFieldHeight = static_cast<float>(lineHeight * 3); //
-		float absoluteTextFieldBottomY = g_size.height();
-		float absoluteCurrentTextY = absoluteTextFieldBottomY - speech->fDeltaY;
-
-		Rect::Num y = checked_range_cast<Rect::Num>(absoluteTextFieldBottomY - 2 * lineHeight - textFieldHeight);
-		Rect::Num h = checked_range_cast<Rect::Num>(absoluteTextFieldBottomY);
-
-		Rect clippingRect(0, y + 1, g_size.width(), h);
-		if(config.interface.limitSpeechWidth) {
-			s32 w = std::min(g_size.width(), s32(640 * g_sizeRatio.y));
-			clippingRect.left = (g_size.width() - w) / 2;
-			clippingRect.right = (g_size.width() + w) / 2;
+		subs[num].clear();
+		subs[num].exist = true;
+		subs[num].sourcePos = sourcePos;
+		subs[num].duration = duration;
+		subs[num].text = _output;
+		
+		//in cinematics there is no valid source, switch subs right away
+		if(isInCinematic()) {
+			activeSub = num;
 		}
+		return &subs[num];
+	} else {
+		return NULL;
+	}
+}
 
-		float displayedTextHeight = (float)ARX_UNICODE_DrawTextInRect(
-			hFontInBook,
-			Vec2f(clippingRect.left + 10.f, absoluteCurrentTextY - lineHeight),
-			clippingRect.right - 10.f,
-			speech->text,
-			Color::white,
-			&clippingRect, 
-			true);
-
-		displayedTextHeight += textFieldHeight;
-
-		float delay = toMs(g_platformTime.lastFrameDuration());
-		if(speech->fDeltaY <= displayedTextHeight) {
-			//vitesse du scroll
-			float yPerDelay;
-
-			if(speech->duration != ArxDuration_ZERO) {
-				yPerDelay = (displayedTextHeight / speech->duration) * delay;
-
-			} else {
-				speech->duration = ArxDurationMs(4000);
-				yPerDelay = (displayedTextHeight / 4000.0f) * delay;
+void updateSubs() {
+	
+	//find the closest speech
+	int closest = -1;
+	if(!isInCinematic()) {
+		float leastDist = std::numeric_limits<float>::max();
+		for(size_t i = 0; i < MAX_ASPEECH; i++) {
+			if(subs[i].exist) {
+				float dist;
+				if((dist = glm::distance(subs[i].sourcePos, player.pos)) < leastDist) {
+					closest = i;
+					leastDist = dist;
+				}
 			}
-
-			speech->fDeltaY += yPerDelay;
 		}
+	}
+	
+	if(closest >= 0) {
+		if((closest != activeSub)) {
+			activeSub = closest;
+		}
+	} else {
+		if(activeSub < 0) { //no subtitle to show
+			return;
+		}
+	}
+	
+	SUBTITLE *sub = &subs[activeSub];
+	
+	if(sub->text.empty())
+		return;
+	
+	int lineHeight = hFontInBook->getLineHeight();
+	
+	float textFieldHeight = static_cast<float>(lineHeight * 3); //
+	float absoluteTextFieldBottomY = g_size.height(); //percentage of screen height to match the original formula
+	float absoluteCurrentTextY = absoluteTextFieldBottomY - sub->deltaY;
+	
+	//enlarge the clipping rectangle by two line heights to make room for fading
+	Rect::Num y = checked_range_cast<Rect::Num>(absoluteTextFieldBottomY - lineHeight * 2 - textFieldHeight);
+	Rect::Num h = checked_range_cast<Rect::Num>(absoluteTextFieldBottomY);
+	
+	Rect clippingRect(0, y + 1, g_size.width(), h);
+	if(config.interface.limitSpeechWidth) {
+		s32 w = std::min(g_size.width(), s32(640 * g_sizeRatio.y));
+		clippingRect.left = (g_size.width() - w) / 2;
+		clippingRect.right = (g_size.width() + w) / 2;
+	}
+	
+	float displayedTextHeight = (float)ARX_UNICODE_DrawTextInRect(
+		hFontInBook,
+		Vec2f(clippingRect.left + 10.f, absoluteCurrentTextY - lineHeight),
+		clippingRect.right - 10.f,
+		sub->text,
+		Color::white,
+		&clippingRect, true);
+	
+	displayedTextHeight += textFieldHeight;
+	
+	//update subtitle position
+	float delay = toMs(g_platformTime.lastFrameDuration());
+	if(sub->deltaY <= displayedTextHeight) {
+		//vitesse du scroll
+		float yPerDelay;
+		
+		if(sub->duration != ArxDuration_ZERO) {
+			yPerDelay = (sub->yPerMsec = displayedTextHeight / sub->duration) * delay;
+		} else {
+			sub->duration = ArxDurationMs(4000);
+			yPerDelay = (sub->yPerMsec = displayedTextHeight / 4000.0f) * delay;
+		}
+		sub->deltaY += yPerDelay;
+	}
+	
+	//update deltaY for other active subs
+	for(size_t i = 0; i < MAX_ASPEECH; i++) {
+		if(!subs[i].exist || subs[i].text.empty() || i == activeSub) {
+			continue;
+		}
+		subs[i].deltaY += subs[i].yPerMsec * delay;
 	}
 }

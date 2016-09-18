@@ -60,6 +60,24 @@ class Entity;
 
 const size_t MAX_SPEECH = 9;
 
+struct SUBTITLE {
+	bool exist;
+	ArxDuration duration; // Minimum value
+	float yPerMsec; //speed
+	float deltaY;
+	std::string text;
+	Vec3f sourcePos;
+
+	void clear(){
+		exist = false;
+		duration = ArxDuration_ZERO;
+		yPerMsec = 0.0f;
+		deltaY = 0.0f;
+		text.clear();
+		sourcePos = Vec3f(-1.0, -1.0, -1.0);
+	};
+};
+
 enum CinematicSpeechMode {
 	ARX_CINE_SPEECH_NONE,
 	ARX_CINE_SPEECH_ZOOM, // uses start/endangle alpha & beta, startpos & endpos
@@ -146,13 +164,12 @@ struct ARX_SPEECH {
 	SpeechFlags flags;
 	ArxInstant time_creation;
 	ArxDuration duration;
-	float fDeltaY;
-	std::string text;
 	Entity * io;
 	Entity * ioscript;
 	CinematicSpeech cine;
 	EERIE_SCRIPT * es;
 	long scrpos;
+	SUBTITLE *subtitle;
 	
 	void clear() {
 		exist = 0;
@@ -161,13 +178,12 @@ struct ARX_SPEECH {
 		flags = 0;
 		time_creation = ArxInstant_ZERO;
 		duration = ArxDuration_ZERO;
-		fDeltaY = 0;
-		text.clear();
 		io = NULL;
 		ioscript = NULL;
 		cine.clear();
 		es = NULL;
 		scrpos = 0;
+		subtitle = NULL;
 	}
 	
 };
@@ -198,5 +214,8 @@ long ARX_SPEECH_AddSpeech(Entity * io, const std::string & data, long mood, Spee
 void ARX_SPEECH_ReleaseIOSpeech(Entity * io);
 void ARX_SPEECH_ClearIOSpeech(Entity * io);
 void ARX_SPEECH_Launch_No_Unicode_Seek(const std::string & string, Entity * io_source);
+
+SUBTITLE *addSub(const std::string & key, const std::string & variant, Vec3f sourcePos, ArxDuration duration);
+void updateSubs();
 
 #endif // ARX_GUI_SPEECH_H
