@@ -738,11 +738,9 @@ ValueType getSystemVar(const EERIE_SCRIPT * es, Entity * entity, const std::stri
 			
 			if(boost::starts_with(name, "^speaking")) {
 				if(entity) {
-					for(size_t i = 0; i < MAX_ASPEECH; i++) {
-						if(aspeech[i].exist && entity == aspeech[i].io) {
-							*lcontent = 1;
-							return TYPE_LONG;
-						}
+					if(ARX_SPEECH_HasEntityQueuedSpeech(entity)) {
+						*lcontent = 1;
+						return TYPE_LONG;
 					}
 				}
 				*lcontent = 0;
