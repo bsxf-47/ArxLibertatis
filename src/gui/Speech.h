@@ -58,8 +58,6 @@ struct EERIE_CAMERA;
 struct EERIE_SCRIPT;
 class Entity;
 
-const size_t MAX_SPEECH = 9;
-
 enum CinematicSpeechMode {
 	ARX_CINE_SPEECH_NONE,
 	ARX_CINE_SPEECH_ZOOM, // uses start/endangle alpha & beta, startpos & endpos
@@ -175,8 +173,6 @@ struct ARX_SPEECH {
 	}
 	
 };
-
-const size_t MAX_ASPEECH = 100;
 
 void ARX_SPEECH_FirstInit();
 void ARX_SPEECH_Reset();

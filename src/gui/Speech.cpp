@@ -85,6 +85,9 @@ extern TextureContainer *	arx_logo_tc;
 extern bool EXTERNALVIEW;
 extern bool REQUEST_SPEECH_SKIP;
 
+const size_t MAX_ASPEECH = 100;
+const size_t MAX_SPEECH = 9;
+
 ARX_SPEECH aspeech[MAX_ASPEECH];
 Notification speech[MAX_SPEECH];
 
