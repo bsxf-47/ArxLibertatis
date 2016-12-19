@@ -227,6 +227,15 @@ void ARX_SPEECH_Check()
 		ARX_SPEECH_Render();
 }
 
+bool ARX_SPEECH_IsQueueEmpty(){
+	for(size_t i = 0; i < MAX_SPEECH; i++) {
+		if(speech[i].timecreation > ArxInstant_ZERO) {
+			return false;
+		}
+	}
+	return true;
+}
+
 void ARX_SPEECH_Launch_No_Unicode_Seek(const std::string & text, Entity * io_source) {
 	
 	long mood = ANIM_TALK_NEUTRAL;

@@ -1510,9 +1510,8 @@ void ARX_INTERFACE_ManageOpenedBook_SpellsDraw() {
 			SpecialCursor=CURSOR_INTERACTION_ON;
 			DrawBookTextCenter(hFontInBook, Vec2f(208, 90), spellInfo.name, Color::none);
 			
-			for(size_t si = 0; si < MAX_SPEECH; si++) {
-				if(speech[si].timecreation > ArxInstant_ZERO)
-					FLYING_OVER=0;
+			if(!ARX_SPEECH_IsQueueEmpty()) {
+				FLYING_OVER=0;
 			}
 			
 			OLD_FLYING_OVER = FLYING_OVER;

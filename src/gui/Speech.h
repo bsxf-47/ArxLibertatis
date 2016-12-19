@@ -186,6 +186,7 @@ void ARX_SPEECH_Reset();
 void ARX_SPEECH_Update();
 void ARX_SPEECH_Init();
 void ARX_SPEECH_Check();
+bool ARX_SPEECH_IsQueueEmpty();
 
 /*!
  * Add a raw text message to the "system" log (top of the screen).
