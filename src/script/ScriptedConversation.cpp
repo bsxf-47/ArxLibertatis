@@ -368,26 +368,26 @@ public:
 			voixoff |= ARX_SPEECH_FLAG_NOTEXT;
 		}
 		
-		long speechnum;
+		ARX_SPEECH *speech;
 		if(player) {
-			speechnum = ARX_SPEECH_AddSpeech(entities.player(), data, mood, voixoff);
+			speech = ARX_SPEECH_AddSpeech(entities.player(), data, mood, voixoff);
 		} else {
-			speechnum = ARX_SPEECH_AddSpeech(io, data, mood, voixoff);
+			speech = ARX_SPEECH_AddSpeech(io, data, mood, voixoff);
 		}
-		if(speechnum < 0) {
+		if(!speech) {
 			return Failed;
 		}
 		
 		size_t onspeechend = context.skipCommand();
 		
 		if(onspeechend != (size_t)-1) {
-			aspeech[speechnum].scrpos = onspeechend;
-			aspeech[speechnum].es = context.getScript();
-			aspeech[speechnum].ioscript = io;
+			speech->scrpos = onspeechend;
+			speech->es = context.getScript();
+			speech->ioscript = io;
 			if(unbreakable) {
-				aspeech[speechnum].flags |= ARX_SPEECH_FLAG_UNBREAKABLE;
+				speech->flags |= ARX_SPEECH_FLAG_UNBREAKABLE;
 			}
-			aspeech[speechnum].cine = acs;
+			speech->cine = acs;
 		}
 		
 		return Success;
