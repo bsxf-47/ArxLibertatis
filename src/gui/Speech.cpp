@@ -245,6 +245,15 @@ ARX_SPEECH *ARX_SPEECH_FirstCineSpeech(){
 	return NULL;
 }
 
+bool ARX_SPEECH_HasEntityQueuedSpeech(Entity *io){
+	for(size_t i = 0; i < MAX_ASPEECH; i++) {
+		if(aspeech[i].exist && (aspeech[i].io == io)) {
+			return true;
+		}
+	}
+	return false;
+}
+
 void ARX_SPEECH_Launch_No_Unicode_Seek(const std::string & text, Entity * io_source) {
 	
 	long mood = ANIM_TALK_NEUTRAL;

@@ -202,5 +202,6 @@ ARX_SPEECH *ARX_SPEECH_FirstCineSpeech();
 void ARX_SPEECH_ReleaseIOSpeech(Entity * io);
 void ARX_SPEECH_ClearIOSpeech(Entity * io);
 void ARX_SPEECH_Launch_No_Unicode_Seek(const std::string & string, Entity * io_source);
+bool ARX_SPEECH_HasEntityQueuedSpeech(Entity *io);
 
 #endif // ARX_GUI_SPEECH_H

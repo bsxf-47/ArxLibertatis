@@ -1083,10 +1083,8 @@ void ARX_PLAYER_FrameCheck(PlatformDuration delta)
 				if(!BLOCK_PLAYER_CONTROLS) {
 					bool bOk = true;
 
-					for(size_t i = 0; i < MAX_ASPEECH; i++) {
-						if(aspeech[i].exist && (aspeech[i].io == entities.player())) {
+					if(ARX_SPEECH_HasEntityQueuedSpeech(entities.player())) {
 							bOk = false;
-						}
 					}
 
 					if(bOk)
