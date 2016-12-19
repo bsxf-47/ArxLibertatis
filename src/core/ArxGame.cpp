@@ -1404,21 +1404,14 @@ void ArxGame::speechControlledCinematic() {
 	/////////////////////////////////////////////
 	// Now checks for speech controlled cinematic
 
-	long valid=-1;
+	ARX_SPEECH *speech = ARX_SPEECH_FirstCineSpeech();
 
-	for(size_t i = 0; i < MAX_ASPEECH; i++) {
-		if(aspeech[i].exist && aspeech[i].cine.type > 0) {
-			valid = i;
-			break;
-		}
-	}
-
-	if(valid >= 0) {
-		const CinematicSpeech & acs = aspeech[valid].cine;
-		const Entity * io = aspeech[valid].io;
+	if(speech) {
+		const CinematicSpeech & acs = speech->cine;
+		const Entity * io = speech->io;
 		
-		float elapsed = arxtime.now_f() - aspeech[valid].time_creation;
-		float rtime = elapsed / aspeech[valid].duration;
+		float elapsed = arxtime.now_f() - speech->time_creation;
+		float rtime = elapsed / speech->duration;
 
 		rtime = glm::clamp(rtime, 0.f, 1.f);
 

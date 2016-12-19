@@ -198,6 +198,7 @@ void ARX_SPEECH_ClearAll();
  * \param data is a sample name / localised string id
  */
 long ARX_SPEECH_AddSpeech(Entity * io, const std::string & data, long mood, SpeechFlags flags = 0);
+ARX_SPEECH *ARX_SPEECH_FirstCineSpeech();
 void ARX_SPEECH_ReleaseIOSpeech(Entity * io);
 void ARX_SPEECH_ClearIOSpeech(Entity * io);
 void ARX_SPEECH_Launch_No_Unicode_Seek(const std::string & string, Entity * io_source);
