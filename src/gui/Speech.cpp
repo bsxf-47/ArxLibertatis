@@ -449,8 +449,9 @@ void ARX_SPEECH_Update() {
 			long scrpos = aspeech[i].scrpos;
 			ARX_SPEECH_Release(i);
 
-			if(es && ValidIOAddress(io))
+			if(es && ValidIOAddress(io)) {
 				ScriptEvent::send(es, SM_EXECUTELINE, "", io, "", scrpos);
+			}
 		}
 	}
 }
