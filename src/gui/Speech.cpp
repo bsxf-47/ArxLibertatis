@@ -349,8 +349,6 @@ long ARX_SPEECH_AddSpeech(Entity * io, const std::string & data, long mood,
 	aspeech[num].flags = flags;
 	aspeech[num].sample = audio::INVALID_ID;
 	aspeech[num].fDeltaY = 0.f;
-	aspeech[num].iTimeScroll = 0;
-	aspeech[num].fPixelScroll = 0.f;
 	aspeech[num].mood = mood;
 
 	LogDebug("speech \"" << data << '"');
@@ -475,81 +473,64 @@ void ARX_SPEECH_Update() {
 		if(!cinematicBorder.isActive())
 			continue;
 
-		if(cinematicBorder.CINEMA_DECAL < 100.f)
-			continue;
+		/*if(cinematicBorder.CINEMA_DECAL < 100.f)
+			continue;*/
 
-		Vec2i sSize = hFontInBook->getTextSize(speech->text);
+		int lineHeight = hFontInBook->getLineHeight();
 
-		float fZoneClippHeight	=	static_cast<float>(sSize.y * 3);
-		float fStartYY			=	100 * g_sizeRatio.y;
-		float fStartY			=	static_cast<float>(((int)fStartYY - (int)fZoneClippHeight) >> 1);
-		float fDepY				=	((float)g_size.height()) - fStartYY + fStartY - speech->fDeltaY + sSize.y;
-		float fZoneClippY		=	fDepY + speech->fDeltaY;
+		float textFieldHeight = static_cast<float>(lineHeight * 3); //
+		float absoluteTextFieldBottomY = g_size.height();
+		float absoluteCurrentTextY = absoluteTextFieldBottomY - speech->fDeltaY;
 
-		float fAdd = fZoneClippY + fZoneClippHeight ;
+		Rect::Num y = checked_range_cast<Rect::Num>(absoluteTextFieldBottomY - 2 * lineHeight - textFieldHeight);
+		Rect::Num h = checked_range_cast<Rect::Num>(absoluteTextFieldBottomY);
 
-		Rect::Num y = checked_range_cast<Rect::Num>(fZoneClippY);
-		Rect::Num h = checked_range_cast<Rect::Num>(fAdd);
-		
-		Rect clippingRect(0, y+1, g_size.width(), h);
+		Rect clippingRect(0, y + 1, g_size.width(), h);
 		if(config.interface.limitSpeechWidth) {
 			s32 w = std::min(g_size.width(), s32(640 * g_sizeRatio.y));
 			clippingRect.left = (g_size.width() - w) / 2;
 			clippingRect.right = (g_size.width() + w) / 2;
 		}
-		
-		float height = (float)ARX_UNICODE_DrawTextInRect(
-							hFontInBook,
-							Vec2f(clippingRect.left + 10.f, fDepY + fZoneClippHeight),
-							clippingRect.right - 10.f,
-							speech->text,
-							Color::white,
-							&clippingRect);
+
+		float displayedTextHeight = (float)ARX_UNICODE_DrawTextInRect(
+			hFontInBook,
+			Vec2f(clippingRect.left + 10.f, absoluteCurrentTextY - lineHeight),
+			clippingRect.right - 10.f,
+			speech->text,
+			Color::white,
+			&clippingRect);
 
 		GRenderer->SetBlendFunc(BlendZero, BlendInvSrcColor);
 		GRenderer->SetRenderState(Renderer::AlphaBlending, true);
 		GRenderer->SetRenderState(Renderer::DepthTest, false);
 
-		EERIEDrawFill2DRectDegrad(Vec2f(0.f, fZoneClippY - 1.f),
-		                          Vec2f(static_cast<float>(g_size.width()), fZoneClippY + (sSize.y * 3 / 4)),
+		EERIEDrawFill2DRectDegrad(Vec2f(0.f, absoluteTextFieldBottomY),
+		                          Vec2f(static_cast<float>(g_size.width()), absoluteTextFieldBottomY - lineHeight),
 		                          0.f, Color::white, Color::black);
-		EERIEDrawFill2DRectDegrad(Vec2f(0.f, fZoneClippY + fZoneClippHeight - (sSize.y * 3 / 4)),
-		                          Vec2f(static_cast<float>(g_size.width()), fZoneClippY + fZoneClippHeight),
+		EERIEDrawFill2DRectDegrad(Vec2f(0.f, absoluteTextFieldBottomY - textFieldHeight - lineHeight),
+		                          Vec2f(static_cast<float>(g_size.width()), absoluteTextFieldBottomY - textFieldHeight - 2 * lineHeight),
 		                          0.f, Color::black, Color::white);
 
 		GRenderer->SetBlendFunc(BlendOne, BlendZero);
 		GRenderer->SetRenderState(Renderer::DepthTest, true);
 		GRenderer->SetRenderState(Renderer::AlphaBlending, false);
 
-		height += fZoneClippHeight;
+		displayedTextHeight += textFieldHeight;
 
-		if(speech->fDeltaY <= height) {
+		float delay = toMs(g_platformTime.lastFrameDuration());
+		if(speech->fDeltaY <= displayedTextHeight) {
 			//vitesse du scroll
-			float fDTime;
+			float yPerDelay;
 
-			if(speech->sample) {
-				ArxDuration duration = ARX_SOUND_GetDuration(speech->sample);
-				if(duration == ArxDuration_ZERO) {
-					duration = ArxDurationMs(4000);
-				}
+			if(speech->duration != ArxDuration_ZERO) {
+				yPerDelay = (displayedTextHeight / speech->duration) * delay;
 
-				fDTime = (height * g_framedelay) / duration; //speech->duration;
-				float fTimeOneLine = sSize.y * fDTime;
-
-				if(speech->iTimeScroll >= fTimeOneLine) {
-					float fResteLine = sSize.y - speech->fPixelScroll;
-					float fTimePlus = (fResteLine * g_framedelay) / duration;
-					fDTime -= fTimePlus;
-					speech->fPixelScroll = 0.f;
-					speech->iTimeScroll = 0;
-				}
-				speech->iTimeScroll	+= checked_range_cast<int>(g_framedelay);
 			} else {
-				fDTime = (height * g_framedelay) / 4000.0f;
+				speech->duration = ArxDurationMs(4000);
+				yPerDelay = (displayedTextHeight / 4000.0f) * delay;
 			}
 
-			speech->fDeltaY			+= fDTime;
-			speech->fPixelScroll	+= fDTime;
+			speech->fDeltaY += yPerDelay;
 		}
 	}
 }

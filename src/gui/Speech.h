@@ -147,8 +147,6 @@ struct ARX_SPEECH {
 	ArxInstant time_creation;
 	ArxDuration duration;
 	float fDeltaY;
-	int iTimeScroll;
-	float fPixelScroll;
 	std::string text;
 	Entity * io;
 	Entity * ioscript;
@@ -164,8 +162,6 @@ struct ARX_SPEECH {
 		time_creation = ArxInstant_ZERO;
 		duration = ArxDuration_ZERO;
 		fDeltaY = 0;
-		iTimeScroll = 0;
-		fPixelScroll = 0;
 		text.clear();
 		io = NULL;
 		ioscript = NULL;
