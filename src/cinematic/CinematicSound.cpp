@@ -46,7 +46,10 @@ ZeniMax Media Inc., Suite 120, Rockville, Maryland 20850 USA.
 #include <iomanip>
 
 #include "audio/AudioTypes.h"
+#include "game/Entity.h"
+#include "game/EntityManager.h"
 #include "graphics/Math.h"
+#include "gui/Speech.h"
 #include "io/log/Logger.h"
 #include "io/resource/ResourcePath.h"
 #include "scene/GameSound.h"
@@ -64,6 +67,7 @@ struct CinematicSound {
 	bool isSpeech;
 	res::path file;
 	audio::SourceId handle;
+	SUBTITLE *subtitle;
 	
 };
 
@@ -126,6 +130,10 @@ bool PlaySoundKeyFramer(int index) {
 	LogDebug("playing " << (cs.isSpeech ? "speech" : "sound")
 	         << ' ' << index << " = " << cs.file);
 	cs.handle = ARX_SOUND_PlayCinematic(cs.file, cs.isSpeech);
+
+	if(cs.isSpeech) {
+		cs.subtitle = addSub(cs.file.string(), "", entities.player()->pos, ARX_SOUND_GetDuration(cs.handle));
+	}
 	
 	return true;
 }
@@ -136,6 +144,10 @@ void StopSoundKeyFramer() {
 		if(TabSound[i].exists && TabSound[i].handle != audio::INVALID_ID) {
 			ARX_SOUND_Stop(TabSound[i].handle);
 			TabSound[i].handle = audio::INVALID_ID;
+			if(TabSound[i].subtitle) {
+				TabSound[i].subtitle->clear();
+				TabSound[i].subtitle = NULL;
+			}
 		}
 	}
 }

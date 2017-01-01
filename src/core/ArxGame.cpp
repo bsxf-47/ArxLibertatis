@@ -2233,6 +2233,7 @@ void ArxGame::render() {
 	} else if(isInCinematic()) {
 		benchmark::begin(benchmark::Cinematic);
 		cinematicRender();
+		updateSubs();
 	} else {
 		benchmark::begin(cinematicBorder.CINEMA_DECAL ? benchmark::Cutscene : benchmark::Scene);
 		updateLevel();
