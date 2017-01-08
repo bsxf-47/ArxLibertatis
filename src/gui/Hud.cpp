@@ -1462,6 +1462,7 @@ void HudRoot::draw() {
 	
 	g_secondaryInventoryHud.update();
 	g_playerInventoryHud.update();
+	g_playerInventoryHud.updateRect();
 	mecanismIcon.update();
 	screenArrows.update();
 	
