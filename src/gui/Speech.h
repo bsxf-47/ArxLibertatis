@@ -216,6 +216,6 @@ void ARX_SPEECH_ClearIOSpeech(Entity * io);
 void ARX_SPEECH_Launch_No_Unicode_Seek(const std::string & string, Entity * io_source);
 
 SUBTITLE *addSub(const std::string & key, const std::string & variant, Vec3f sourcePos, ArxDuration duration);
-void updateSubs();
+void updateSubs(Rectf *rect = NULL);
 
 #endif // ARX_GUI_SPEECH_H

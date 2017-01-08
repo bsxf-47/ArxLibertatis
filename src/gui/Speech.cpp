@@ -495,7 +495,7 @@ SUBTITLE *addSub(const std::string & key, const std::string & variant, Vec3f sou
 	}
 }
 
-void updateSubs() {
+void updateSubs(Rectf *rect) {
 	
 	//find the closest speech
 	int closest = -1;
@@ -530,7 +530,14 @@ void updateSubs() {
 	int lineHeight = hFontInBook->getLineHeight();
 	
 	float textFieldHeight = static_cast<float>(lineHeight * 3); //
-	float absoluteTextFieldBottomY = g_size.height(); //percentage of screen height to match the original formula
+	
+	float absoluteTextFieldBottomY;
+	if(rect) {
+		absoluteTextFieldBottomY = rect->bottom;
+	} else {
+		absoluteTextFieldBottomY = g_size.height();
+	}
+	
 	float absoluteCurrentTextY = absoluteTextFieldBottomY - sub->deltaY;
 	
 	//enlarge the clipping rectangle by two line heights to make room for fading
@@ -542,6 +549,10 @@ void updateSubs() {
 		s32 w = std::min(g_size.width(), s32(640 * g_sizeRatio.y));
 		clippingRect.left = (g_size.width() - w) / 2;
 		clippingRect.right = (g_size.width() + w) / 2;
+	}
+
+	if(rect) {
+		clippingRect = Rect(*rect);
 	}
 	
 	float displayedTextHeight = (float)ARX_UNICODE_DrawTextInRect(
