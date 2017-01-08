@@ -79,7 +79,9 @@ Font * hFontInGameNote = NULL;
 Font * hFontDebug = NULL;
 
 static void ARX_UNICODE_FormattingInRect(Font * font, const std::string & text,
-                                         const Rect & rect, Color col,
+                                         const Rect & rect, Color col, 
+                                         const Rect * fadeRect = NULL, 
+                                         bool fade = false,
                                          long * textHeight = 0, long * numChars = 0,
                                          bool computeOnly = false) {
 	
@@ -156,6 +158,18 @@ static void ARX_UNICODE_FormattingInRect(Font * font, const std::string & text,
 			
 			// Draw the line
 			if(!computeOnly) {
+				int lineHeight = font->getLineHeight();
+				col.a = 255;
+				if(fade) {
+					if(penY <= fadeRect->bottom - lineHeight || penY >= fadeRect->top) {
+						if(fadeRect->bottom - penY - lineHeight > penY - fadeRect->top) {
+							//closer to the top
+							col.a = glm::clamp((int(penY - fadeRect->top) * 20), 0, 255);
+						} else {
+							col.a = glm::clamp(int((fadeRect->bottom - penY - lineHeight) * 20), 0, 255);
+						}
+					}
+				}
 				font->draw(rect.left, penY, itTextStart, itTextEnd, col);
 			}
 			
@@ -184,7 +198,7 @@ static void ARX_UNICODE_FormattingInRect(Font * font, const std::string & text,
 long ARX_UNICODE_ForceFormattingInRect(Font * font, const std::string & text,
                                        const Rect & rect) {
 	long numChars;
-	ARX_UNICODE_FormattingInRect(font, text, rect, Color::none, 0, &numChars, true);
+	ARX_UNICODE_FormattingInRect(font, text, rect, Color::none, NULL, false, 0, &numChars, true);
 	return numChars;
 }
 
@@ -193,7 +207,8 @@ long ARX_UNICODE_DrawTextInRect(Font* font,
                                 float maxx,
                                 const std::string& _text,
                                 Color col,
-                                const Rect * pClipRect
+                                const Rect * pClipRect,
+                                bool fade
                                ) {
 	
 	Rect previousViewport;
@@ -208,7 +223,7 @@ long ARX_UNICODE_DrawTextInRect(Font* font,
 	}
 
 	long height;
-	ARX_UNICODE_FormattingInRect(font, _text, rect, col, &height);
+	ARX_UNICODE_FormattingInRect(font, _text, rect, col, pClipRect, fade, &height);
 
 	if(pClipRect) {
 		GRenderer->SetViewport(previousViewport);

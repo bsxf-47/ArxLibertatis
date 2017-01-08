@@ -498,22 +498,8 @@ void ARX_SPEECH_Update() {
 			clippingRect.right - 10.f,
 			speech->text,
 			Color::white,
-			&clippingRect);
-
-		GRenderer->SetBlendFunc(BlendZero, BlendInvSrcColor);
-		GRenderer->SetRenderState(Renderer::AlphaBlending, true);
-		GRenderer->SetRenderState(Renderer::DepthTest, false);
-
-		EERIEDrawFill2DRectDegrad(Vec2f(0.f, absoluteTextFieldBottomY),
-		                          Vec2f(static_cast<float>(g_size.width()), absoluteTextFieldBottomY - lineHeight),
-		                          0.f, Color::white, Color::black);
-		EERIEDrawFill2DRectDegrad(Vec2f(0.f, absoluteTextFieldBottomY - textFieldHeight - lineHeight),
-		                          Vec2f(static_cast<float>(g_size.width()), absoluteTextFieldBottomY - textFieldHeight - 2 * lineHeight),
-		                          0.f, Color::black, Color::white);
-
-		GRenderer->SetBlendFunc(BlendOne, BlendZero);
-		GRenderer->SetRenderState(Renderer::DepthTest, true);
-		GRenderer->SetRenderState(Renderer::AlphaBlending, false);
+			&clippingRect, 
+			true);
 
 		displayedTextHeight += textFieldHeight;
 
