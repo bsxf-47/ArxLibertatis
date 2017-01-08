@@ -45,10 +45,12 @@
 #include "graphics/Renderer.h"
 #include "graphics/particle/ParticleEffects.h"
 #include "graphics/data/TextureContainer.h"
+#include "graphics/font/Font.h"
 
 #include "gui/Cursor.h"
 #include "gui/Interface.h"
 #include "gui/Speech.h"
+#include "gui/Text.h"
 #include "gui/book/Book.h"
 #include "gui/hud/HudCommon.h"
 #include "gui/hud/PlayerInventory.h"
@@ -1434,6 +1436,34 @@ void PlayerInterfaceFader::update() {
 	}
 }
 
+void SubtitleArea::init() {
+	m_size.y = 5 * hFontInBook->getLineHeight();
+	if(config.interface.limitSpeechWidth) {
+		m_size.x = std::min(g_size.width(), s32(640 * g_sizeRatio.y));
+	} else {
+		m_size.x = g_size.width();
+	}
+}
+
+void SubtitleArea::updateRect(const Rectf & parent) {
+	m_rect = createChild(parent, Anchor_TopCenter, m_size, Anchor_BottomCenter);
+	
+	if(g_secondaryInventoryHud.rect().right > m_rect.left && g_secondaryInventoryHud.rect().bottom > m_rect.top) {
+		m_rect.left = g_secondaryInventoryHud.rect().right;
+	}
+	if(m_rect.bottomLeft().y > g_size.bottom) {
+		m_rect.bottom = g_size.bottom;
+	}
+}
+
+void SubtitleArea::update() {
+	updateSubs(&m_rect);
+}
+
+void SubtitleArea::draw(){
+
+}
+
 static void setHudTextureState() {
 	TextureStage::FilterMode filter = TextureStage::FilterLinear;
 	if(config.interface.hudScaleFilter == UIFilterNearest) {
@@ -1462,8 +1492,8 @@ void HudRoot::draw() {
 	
 	g_secondaryInventoryHud.updateRect();
 	g_secondaryInventoryHud.update();
-	g_playerInventoryHud.update();
 	g_playerInventoryHud.updateRect();
+	g_playerInventoryHud.update();
 	mecanismIcon.update();
 	screenArrows.update();
 	
@@ -1480,6 +1510,9 @@ void HudRoot::draw() {
 	spacer.bottom = anchorPos.y;
 	spacer.top = spacer.bottom - 30;
 	spacer.right = spacer.left + 20;
+
+	subtitleArea.updateRect(g_playerInventoryHud.rect());
+	subtitleArea.update();
 	
 	stealthGauge.update(spacer);
 	
@@ -1681,6 +1714,8 @@ void HudRoot::init() {
 	purseIconGui.init();
 	
 	hitStrengthGauge.init();
+
+	subtitleArea.init();
 	
 	//setHudScale(2);
 }

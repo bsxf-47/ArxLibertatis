@@ -389,6 +389,19 @@ public:
 	void update();
 };
 
+/*!
+ * \brief Area for subtitles
+ */
+class SubtitleArea : public HudItem {
+private:
+	Vec2f m_size;
+public:
+	void init();
+	void updateRect(const Rectf & parent);
+	void update();
+	void draw();
+};
+
 class HudRoot : public HudItem {
 public:
 	void setScale(float scale);
@@ -422,6 +435,7 @@ private:
 	ActiveSpellsGui activeSpellsGui;
 	DamagedEquipmentGui damagedEquipmentGui;
 	StealthGauge stealthGauge;
+	SubtitleArea subtitleArea;
 };
 
 extern HudRoot g_hudRoot;

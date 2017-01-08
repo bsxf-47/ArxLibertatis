@@ -2158,8 +2158,9 @@ void ArxGame::renderLevel() {
 	GRenderer->SetScissor(Rect::ZERO);
 	
 	ARX_SPEECH_Update();
-	updateSubs();
-	
+	if(cinematicBorder.isActive()) {
+		updateSubs();
+	}
 }
 
 void ArxGame::render() {
