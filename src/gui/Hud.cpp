@@ -1460,6 +1460,7 @@ void HudRoot::draw() {
 	hitStrengthGauge.updateRect(Rectf(g_size));
 	hitStrengthGauge.update();
 	
+	g_secondaryInventoryHud.updateRect();
 	g_secondaryInventoryHud.update();
 	g_playerInventoryHud.update();
 	g_playerInventoryHud.updateRect();

@@ -77,6 +77,7 @@ public:
 	void close();
 	
 	void updateFader();
+	void updateRect();
 	
 	enum Fade {
 		Fade_left = -1,
