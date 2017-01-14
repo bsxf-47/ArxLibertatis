@@ -1506,9 +1506,14 @@ void HudRoot::draw() {
 	Vec2f anchorPos = g_playerInventoryHud.anchorPosition();
 	
 	Rectf spacer;
-	spacer.left = std::max(g_secondaryInventoryHud.m_fadePosition + 160, healthGauge.rect().right);
 	spacer.bottom = anchorPos.y;
 	spacer.top = spacer.bottom - 30;
+
+	if(spacer.top > g_secondaryInventoryHud.rect().bottom) {
+		spacer.left = healthGauge.rect().right;
+	} else {
+		spacer.left = g_secondaryInventoryHud.m_fadePosition + 160;
+	}
 	spacer.right = spacer.left + 20;
 
 	subtitleArea.updateRect(g_playerInventoryHud.rect());
